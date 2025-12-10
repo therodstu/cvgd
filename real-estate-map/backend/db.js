@@ -74,6 +74,18 @@ class Database {
         )
       `);
 
+      // Feature requests table
+      await this.pool.query(`
+        CREATE TABLE IF NOT EXISTS feature_requests (
+          id SERIAL PRIMARY KEY,
+          description TEXT NOT NULL,
+          user_email TEXT,
+          status TEXT DEFAULT 'pending',
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+
       // Create default admin user if it doesn't exist
       await this.createDefaultAdmin();
       
@@ -407,6 +419,43 @@ class Database {
   async deleteAllProperties() {
     const result = await this.pool.query('DELETE FROM properties');
     return { count: result.rowCount };
+  }
+
+  // Feature request methods
+  async createFeatureRequest(description, userEmail) {
+    const result = await this.pool.query(
+      'INSERT INTO feature_requests (description, user_email) VALUES ($1, $2) RETURNING id, description, user_email, status, created_at',
+      [description, userEmail || null]
+    );
+    return result.rows[0];
+  }
+
+  async getAllFeatureRequests() {
+    const result = await this.pool.query(
+      'SELECT id, description, user_email, status, created_at, updated_at FROM feature_requests ORDER BY created_at DESC'
+    );
+    return result.rows;
+  }
+
+  async getFeatureRequestById(id) {
+    const result = await this.pool.query(
+      'SELECT id, description, user_email, status, created_at, updated_at FROM feature_requests WHERE id = $1',
+      [id]
+    );
+    return result.rows[0] || null;
+  }
+
+  async updateFeatureRequestStatus(id, status) {
+    const result = await this.pool.query(
+      'UPDATE feature_requests SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING id, description, user_email, status, created_at, updated_at',
+      [status, id]
+    );
+    return result.rows[0] || null;
+  }
+
+  async deleteFeatureRequest(id) {
+    const result = await this.pool.query('DELETE FROM feature_requests WHERE id = $1', [id]);
+    return { id, deleted: result.rowCount > 0 };
   }
 
   async close() {

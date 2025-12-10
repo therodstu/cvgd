@@ -7,8 +7,10 @@ import Map from './components/Map';
 import PropertyInfoPanel from './components/PropertyInfoPanel';
 import PropertyList from './components/PropertyList';
 import AdminUserManagement from './components/AdminUserManagement';
+import FeatureRequests from './components/FeatureRequests';
 import { UserProvider, useUser } from './contexts/UserContext';
 import UserMenu from './components/UserMenu';
+import FeatureRequestDialog from './components/FeatureRequestDialog';
 import { ParcelData } from './services/parcelService';
 import { geocodingService } from './services/geocodingService';
 import { propertyService, Property } from './services/propertyService';
@@ -17,6 +19,8 @@ import type { Socket } from 'socket.io-client';
 
 function App() {
   const [showUserManagement, setShowUserManagement] = useState(false);
+  const [showFeatureRequest, setShowFeatureRequest] = useState(false);
+  const [showFeatureRequests, setShowFeatureRequests] = useState(false);
   const { isAdmin } = useUser();
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
   const [, setSelectedParcel] = useState<ParcelData | null>(null);
@@ -310,7 +314,25 @@ function App() {
               Interactive parcel mapping with zoning and valuation data
             </p>
           </div>
-          <UserMenu onManageUsers={() => setShowUserManagement(!showUserManagement)} />
+          <div className="flex items-center gap-4">
+            <Button
+              variant="outline"
+              className="bg-primary-foreground/10 hover:bg-primary-foreground/20 text-primary-foreground border-primary-foreground/20"
+              onClick={() => setShowFeatureRequest(true)}
+            >
+              Request a Feature
+            </Button>
+            {isAdmin && (
+              <Button
+                variant="outline"
+                className="bg-primary-foreground/10 hover:bg-primary-foreground/20 text-primary-foreground border-primary-foreground/20"
+                onClick={() => setShowFeatureRequests(!showFeatureRequests)}
+              >
+                View Requests
+              </Button>
+            )}
+            <UserMenu onManageUsers={() => setShowUserManagement(!showUserManagement)} />
+          </div>
         </div>
       </header>
 
@@ -394,7 +416,19 @@ function App() {
               <AdminUserManagement />
             </div>
           )}
+
+          {isAdmin && showFeatureRequests && (
+            <div className="mt-6">
+              <FeatureRequests />
+            </div>
+          )}
         </main>
+
+        {/* Feature Request Dialog */}
+        <FeatureRequestDialog
+          open={showFeatureRequest}
+          onOpenChange={setShowFeatureRequest}
+        />
       </div>
   );
 }

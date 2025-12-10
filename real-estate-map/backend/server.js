@@ -6,7 +6,6 @@ const path = require('path');
 const axios = require('axios');
 const jwt = require('jsonwebtoken');
 const database = require('./db');
-const { sendFeatureRequestEmail } = require('./emailService');
 require('dotenv').config();
 
 const app = express();
@@ -685,7 +684,7 @@ app.delete('/api/users/:id', authenticateToken, requireAdmin, async (req, res) =
   }
 });
 
-// Feature request endpoint
+// Feature request endpoint - store in database
 app.post('/api/feature-request', async (req, res) => {
   try {
     const { description, userEmail } = req.body;
@@ -694,52 +693,68 @@ app.post('/api/feature-request', async (req, res) => {
       return res.status(400).json({ error: 'Feature description is required' });
     }
 
-    const result = await sendFeatureRequestEmail(description.trim(), userEmail || 'Not provided');
+    const featureRequest = await database.createFeatureRequest(
+      description.trim(),
+      userEmail || null
+    );
 
-    if (result.success) {
-      res.json({ 
-        message: 'Feature request sent successfully',
-        messageId: result.messageId 
-      });
-    } else {
-      console.error('Failed to send feature request email:', result.error);
-      res.status(500).json({ 
-        error: 'Failed to send feature request',
-        details: result.error 
-      });
-    }
+    res.status(201).json({
+      message: 'Feature request submitted successfully',
+      id: featureRequest.id
+    });
   } catch (error) {
-    console.error('Error processing feature request:', error);
-    res.status(500).json({ error: 'Failed to process feature request' });
+    console.error('Error creating feature request:', error);
+    res.status(500).json({ error: 'Failed to submit feature request' });
   }
 });
 
-// Feature request endpoint
-app.post('/api/feature-request', async (req, res) => {
+// Get all feature requests (admin only)
+app.get('/api/feature-requests', authenticateToken, requireAdmin, async (req, res) => {
   try {
-    const { description, userEmail } = req.body;
-
-    if (!description || !description.trim()) {
-      return res.status(400).json({ error: 'Feature description is required' });
-    }
-
-    const result = await sendFeatureRequestEmail(description.trim(), userEmail || 'Not provided');
-
-    if (result.success) {
-      res.json({ 
-        message: 'Feature request sent successfully',
-        messageId: result.messageId 
-      });
-    } else {
-      console.error('Failed to send feature request email:', result.error);
-      res.status(500).json({ 
-        error: 'Failed to send feature request',
-        details: result.error 
-      });
-    }
+    const requests = await database.getAllFeatureRequests();
+    res.json(requests);
   } catch (error) {
-    console.error('Error processing feature request:', error);
-    res.status(500).json({ error: 'Failed to process feature request' });
+    console.error('Error fetching feature requests:', error);
+    res.status(500).json({ error: 'Failed to fetch feature requests' });
+  }
+});
+
+// Update feature request status (admin only)
+app.put('/api/feature-requests/:id', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    const { status } = req.body;
+
+    if (!['pending', 'in-progress', 'completed', 'rejected'].includes(status)) {
+      return res.status(400).json({ error: 'Invalid status. Must be: pending, in-progress, completed, or rejected' });
+    }
+
+    const updated = await database.updateFeatureRequestStatus(id, status);
+    if (!updated) {
+      return res.status(404).json({ error: 'Feature request not found' });
+    }
+
+    res.json(updated);
+  } catch (error) {
+    console.error('Error updating feature request:', error);
+    res.status(500).json({ error: 'Failed to update feature request' });
+  }
+});
+
+// Delete feature request (admin only)
+app.delete('/api/feature-requests/:id', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    const result = await database.deleteFeatureRequest(id);
+    
+    if (!result.deleted) {
+      return res.status(404).json({ error: 'Feature request not found' });
+    }
+
+    res.json({ message: 'Feature request deleted successfully', id });
+  } catch (error) {
+    console.error('Error deleting feature request:', error);
+    res.status(500).json({ error: 'Failed to delete feature request' });
   }
 });
 
