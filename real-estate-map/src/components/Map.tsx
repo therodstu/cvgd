@@ -4,6 +4,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { parcelService, ParcelData, ParcelFilters } from '../services/parcelService';
 import { franklinCountyService, FranklinCountyParcel } from '../services/franklinCountyService';
+import { getPropertyImageWithFallback } from '../utils/propertyImage';
 
 // Fix for default markers in react-leaflet
 delete (L.Icon.Default.prototype as any)._getIconUrl;
