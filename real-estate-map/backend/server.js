@@ -12,13 +12,26 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
-    origin: ["http://localhost:3000", "http://localhost:3001"],
+    origin: [
+      "http://localhost:3000", 
+      "http://localhost:3001",
+      /\.railway\.app$/,  // Allow all Railway domains
+      /\.railway\.internal$/  // Allow Railway internal domains
+    ],
     methods: ["GET", "POST"]
   }
 });
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: [
+    "http://localhost:3000",
+    "http://localhost:3001",
+    /\.railway\.app$/,  // Allow all Railway domains
+    /\.railway\.internal$/  // Allow Railway internal domains
+  ],
+  credentials: true
+}));
 app.use(express.json());
 
 // Properties will be loaded from database on startup
