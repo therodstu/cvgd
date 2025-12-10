@@ -19,11 +19,11 @@ function App() {
   const [showUserManagement, setShowUserManagement] = useState(false);
   const { isAdmin } = useUser();
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
-  const [selectedParcel, setSelectedParcel] = useState<ParcelData | null>(null);
+  const [, setSelectedParcel] = useState<ParcelData | null>(null);
   const [addressInput, setAddressInput] = useState('');
   const [isGeocoding, setIsGeocoding] = useState(false);
   const [properties, setProperties] = useState<Property[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [, setLoading] = useState(true);
   const socketRef = useRef<Socket | null>(null);
   const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 

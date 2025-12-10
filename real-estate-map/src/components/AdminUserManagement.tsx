@@ -12,7 +12,7 @@ import {
   DialogTitle,
 } from './ui/dialog';
 import { userService, User, CreateUserData } from '../services/userService';
-import { Plus, Edit2, Trash2, X, Check } from 'lucide-react';
+import { Plus, Edit2, Trash2 } from 'lucide-react';
 
 const AdminUserManagement: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);

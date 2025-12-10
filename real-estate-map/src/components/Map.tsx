@@ -62,7 +62,7 @@ const Map: React.FC<MapProps> = ({
   const [realParcels, setRealParcels] = useState<FranklinCountyParcel[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [useRealData, setUseRealData] = useState(true);
+  const [useRealData] = useState(true);
 
   // Clintonville, Ohio coordinates
   const center: [number, number] = [40.035, -83.025];
