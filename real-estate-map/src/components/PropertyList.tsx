@@ -160,7 +160,6 @@ const PropertyList: React.FC<PropertyListProps> = ({
                         )}
                       </div>
                     </div>
-                  </div>
                 );
               })}
             </div>
