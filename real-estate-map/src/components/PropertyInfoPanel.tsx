@@ -100,10 +100,9 @@ const PropertyInfoPanel: React.FC<PropertyInfoPanelProps> = ({
                 className="w-full h-full object-cover"
                 loading="lazy"
                 onError={(e) => {
-                  // Fallback to SVG data URI (always works)
+                  // Fallback to "Coming Soon" message
                   const target = e.target as HTMLImageElement;
-                  const addressPart = property.address.split(',')[0].substring(0, 20);
-                  const svg = `<svg width="400" height="250" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" fill="#6366f1"/><text x="50%" y="50%" text-anchor="middle" font-family="Arial" font-size="16" fill="#ffffff">${addressPart.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</text></svg>`;
+                  const svg = `<svg width="400" height="250" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" fill="#f3f4f6"/><text x="50%" y="50%" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="500" fill="#6b7280">Property Images Coming Soon</text></svg>`;
                   target.src = `data:image/svg+xml;base64,${btoa(svg)}`;
                 }}
               />
