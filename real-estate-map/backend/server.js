@@ -6,6 +6,7 @@ const path = require('path');
 const axios = require('axios');
 const jwt = require('jsonwebtoken');
 const database = require('./db');
+const { sendFeatureRequestEmail } = require('./emailService');
 require('dotenv').config();
 
 const app = express();
@@ -681,6 +682,64 @@ app.delete('/api/users/:id', authenticateToken, requireAdmin, async (req, res) =
   } catch (error) {
     console.error('Error deleting user:', error);
     res.status(500).json({ error: 'Failed to delete user' });
+  }
+});
+
+// Feature request endpoint
+app.post('/api/feature-request', async (req, res) => {
+  try {
+    const { description, userEmail } = req.body;
+
+    if (!description || !description.trim()) {
+      return res.status(400).json({ error: 'Feature description is required' });
+    }
+
+    const result = await sendFeatureRequestEmail(description.trim(), userEmail || 'Not provided');
+
+    if (result.success) {
+      res.json({ 
+        message: 'Feature request sent successfully',
+        messageId: result.messageId 
+      });
+    } else {
+      console.error('Failed to send feature request email:', result.error);
+      res.status(500).json({ 
+        error: 'Failed to send feature request',
+        details: result.error 
+      });
+    }
+  } catch (error) {
+    console.error('Error processing feature request:', error);
+    res.status(500).json({ error: 'Failed to process feature request' });
+  }
+});
+
+// Feature request endpoint
+app.post('/api/feature-request', async (req, res) => {
+  try {
+    const { description, userEmail } = req.body;
+
+    if (!description || !description.trim()) {
+      return res.status(400).json({ error: 'Feature description is required' });
+    }
+
+    const result = await sendFeatureRequestEmail(description.trim(), userEmail || 'Not provided');
+
+    if (result.success) {
+      res.json({ 
+        message: 'Feature request sent successfully',
+        messageId: result.messageId 
+      });
+    } else {
+      console.error('Failed to send feature request email:', result.error);
+      res.status(500).json({ 
+        error: 'Failed to send feature request',
+        details: result.error 
+      });
+    }
+  } catch (error) {
+    console.error('Error processing feature request:', error);
+    res.status(500).json({ error: 'Failed to process feature request' });
   }
 });
 
