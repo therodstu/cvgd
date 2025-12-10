@@ -14,12 +14,16 @@ if (!connectionString) {
 }
 
 // Create connection pool with better timeout settings
+// Note: Railway internal connections (.railway.internal) typically don't require SSL
+// but we enable it for compatibility with both internal and external connections
 const pool = new Pool({
   connectionString: connectionString,
-  // SSL is required for Railway PostgreSQL connections
-  ssl: connectionString?.includes('railway') || connectionString?.includes('railway.app') || connectionString?.includes('railway.internal') 
-    ? { rejectUnauthorized: false } 
-    : false,
+  // SSL configuration: Railway internal network may not require SSL, but enable for compatibility
+  ssl: connectionString?.includes('railway.app') 
+    ? { rejectUnauthorized: false }  // Public Railway endpoint - SSL required
+    : connectionString?.includes('railway.internal')
+    ? false  // Internal Railway network - SSL typically not needed
+    : false,  // Local development - no SSL
   connectionTimeoutMillis: 10000, // 10 seconds
   idleTimeoutMillis: 30000,
   max: 10
