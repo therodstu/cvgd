@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import {
@@ -41,7 +41,7 @@ const FeatureRequests: React.FC = () => {
     };
   };
 
-  const fetchRequests = async () => {
+  const fetchRequests = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch(`${API_URL}/api/feature-requests`, {
@@ -59,11 +59,11 @@ const FeatureRequests: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchRequests();
-  }, []);
+  }, [fetchRequests]);
 
   const updateStatus = async (id: number, status: string) => {
     try {
