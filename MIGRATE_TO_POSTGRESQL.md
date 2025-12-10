@@ -20,8 +20,11 @@
 1. Click on the new **PostgreSQL** service
 2. Go to **Variables** tab
 3. Find `DATABASE_URL` - it should be there automatically
-4. Copy the connection string
+   - **✅ USE THIS:** `DATABASE_URL` (private endpoint, no egress fees)
+   - **❌ DO NOT USE:** `DATABASE_PUBLIC_URL` (public endpoint, incurs egress fees)
+4. Copy the `DATABASE_URL` connection string
    - Format: `postgresql://user:password@host:port/dbname`
+   - Should contain `.railway.internal` or internal Railway hostname (not public domain)
 
 ### 3. Set Environment Variable in Backend
 

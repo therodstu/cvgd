@@ -2,10 +2,24 @@
 const { Pool } = require('pg');
 const bcrypt = require('bcryptjs');
 
+// Use private DATABASE_URL to avoid egress fees
+// DATABASE_URL is the private/internal connection (no fees)
+// DATABASE_PUBLIC_URL is public and incurs egress fees - DO NOT USE
+const connectionString = process.env.DATABASE_URL || process.env.DATABASE_PRIVATE_URL;
+
+if (!connectionString) {
+  console.error('❌ ERROR: DATABASE_URL or DATABASE_PRIVATE_URL must be set!');
+  console.error('Using DATABASE_PUBLIC_URL will incur egress fees.');
+  console.error('Please use the private DATABASE_URL from your PostgreSQL service variables.');
+}
+
 // Create connection pool with better timeout settings
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: process.env.DATABASE_URL?.includes('railway') || process.env.DATABASE_URL?.includes('railway.app') ? { rejectUnauthorized: false } : false,
+  connectionString: connectionString,
+  // SSL is required for Railway PostgreSQL connections
+  ssl: connectionString?.includes('railway') || connectionString?.includes('railway.app') || connectionString?.includes('railway.internal') 
+    ? { rejectUnauthorized: false } 
+    : false,
   connectionTimeoutMillis: 10000, // 10 seconds
   idleTimeoutMillis: 30000,
   max: 10
