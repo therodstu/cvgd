@@ -24,9 +24,12 @@ const pool = new Pool({
     : connectionString?.includes('railway.internal')
     ? false  // Internal Railway network - SSL typically not needed
     : false,  // Local development - no SSL
-  connectionTimeoutMillis: 10000, // 10 seconds
+  connectionTimeoutMillis: 30000, // 30 seconds (increased for Railway)
   idleTimeoutMillis: 30000,
-  max: 10
+  max: 10,
+  // Additional connection options for Railway
+  keepAlive: true,
+  keepAliveInitialDelayMillis: 10000
 });
 
 class Database {
@@ -35,12 +38,29 @@ class Database {
   }
 
   // Initialize database and create tables with retry logic
-  async initialize(retries = 5, delay = 2000) {
+  async initialize(retries = 10, delay = 3000) {
+    // Log connection attempt info
+    if (connectionString) {
+      const urlMatch = connectionString.match(/postgresql:\/\/([^:]+):([^@]+)@([^:]+):(\d+)\/(.+)/);
+      if (urlMatch) {
+        const [, , , host, port, database] = urlMatch;
+        console.log(`🔌 Attempting to connect to PostgreSQL:`);
+        console.log(`   Host: ${host}`);
+        console.log(`   Port: ${port}`);
+        console.log(`   Database: ${database}`);
+      }
+    }
+    
     for (let i = 0; i < retries; i++) {
       try {
-        // Test connection
-        await this.pool.query('SELECT NOW()');
-        console.log('✅ Connected to PostgreSQL database');
+        // Test connection with a simple query
+        const client = await this.pool.connect();
+        try {
+          await client.query('SELECT NOW()');
+          console.log('✅ Connected to PostgreSQL database');
+        } finally {
+          client.release();
+        }
         
         await this.createTables();
         return; // Success, exit retry loop
@@ -53,17 +73,30 @@ class Database {
             host: error.address || 'unknown',
             port: error.port || 'unknown',
             code: error.code,
-            errno: error.errno
+            errno: error.errno,
+            cause: error.cause?.message || 'none'
           });
+          console.error('Full error:', error);
+          
+          // Provide helpful troubleshooting info
+          console.error('\n🔧 Troubleshooting steps:');
+          console.error('1. Verify PostgreSQL service is running in Railway');
+          console.error('2. Check that DATABASE_URL is set correctly in backend service');
+          console.error('3. Ensure both services are in the same Railway project');
+          console.error('4. Check PostgreSQL service logs for errors');
+          
           throw error;
         }
         
         console.warn(`⚠️  Database connection attempt ${i + 1}/${retries} failed. Retrying in ${delay}ms...`);
         console.warn('Error:', error.message);
+        if (error.cause) {
+          console.warn('Cause:', error.cause.message);
+        }
         
         // Wait before retrying (exponential backoff)
         await new Promise(resolve => setTimeout(resolve, delay));
-        delay = Math.min(delay * 1.5, 10000); // Increase delay, max 10 seconds
+        delay = Math.min(delay * 1.2, 15000); // Increase delay, max 15 seconds
       }
     }
   }
