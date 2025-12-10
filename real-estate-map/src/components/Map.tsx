@@ -295,9 +295,12 @@ const Map: React.FC<MapProps> = ({
                 <div className="min-w-[250px] max-w-[300px]">
                   {/* Property Image */}
                   {(() => {
-                    const imageUrl = property.coordinates 
-                      ? `https://api.mapbox.com/styles/v1/mapbox/streets-v11/static/pin-s+ff0000(${property.coordinates[1]},${property.coordinates[0]})/${property.coordinates[1]},${property.coordinates[0]},16,0/250x150?access_token=${process.env.REACT_APP_MAPBOX_TOKEN || ''}`
-                      : `https://via.placeholder.com/250x150?text=${encodeURIComponent(property.address.split(',')[0])}`;
+                    const imageUrl = getPropertyImageWithFallback({
+                      address: property.address,
+                      coordinates: property.coordinates,
+                      width: 250,
+                      height: 150
+                    });
                     
                     return (
                       <div className="w-full h-32 mb-2 overflow-hidden rounded bg-gray-100">
@@ -306,7 +309,8 @@ const Map: React.FC<MapProps> = ({
                           alt={property.address}
                           className="w-full h-full object-cover"
                           onError={(e) => {
-                            (e.target as HTMLImageElement).src = `https://via.placeholder.com/250x150?text=${encodeURIComponent(property.address.split(',')[0])}`;
+                            // Final fallback if image fails to load
+                            (e.target as HTMLImageElement).src = `https://via.placeholder.com/250x150/4F46E5/FFFFFF?text=${encodeURIComponent(property.address.split(',')[0].substring(0, 15))}`;
                           }}
                         />
                       </div>

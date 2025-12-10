@@ -1,5 +1,5 @@
 // Utility function to get property images
-// Uses Google Street View Static API (free tier available)
+// Uses free services that don't require API keys
 
 export interface PropertyImageOptions {
   address?: string;
@@ -11,33 +11,60 @@ export interface PropertyImageOptions {
 }
 
 /**
- * Get Google Street View image URL for a property
- * @param options Property address or coordinates
- * @returns Street View image URL or null if coordinates are not available
+ * Get Google Street View image URL for a property (requires API key)
+ */
+function getGoogleStreetViewUrl(lat: number, lng: number, width: number, height: number, fov: number, pitch: number): string | null {
+  const apiKey = process.env.REACT_APP_GOOGLE_MAPS_API_KEY || '';
+  if (apiKey) {
+    return `https://maps.googleapis.com/maps/api/streetview?size=${width}x${height}&location=${lat},${lng}&fov=${fov}&pitch=${pitch}&key=${apiKey}`;
+  }
+  return null;
+}
+
+/**
+ * Get Mapbox static map image (requires API key)
+ */
+function getMapboxStaticMapUrl(lat: number, lng: number, width: number, height: number): string | null {
+  const token = process.env.REACT_APP_MAPBOX_TOKEN || '';
+  if (token) {
+    return `https://api.mapbox.com/styles/v1/mapbox/streets-v11/static/pin-s+ff0000(${lng},${lat})/${lng},${lat},15,0/${width}x${height}?access_token=${token}`;
+  }
+  return null;
+}
+
+/**
+ * Get a static map image using StaticMapAPI (free, no API key required!)
+ * This service provides static map images without requiring authentication
+ */
+function getFreeStaticMapUrl(lat: number, lng: number, width: number, height: number): string {
+  // Using StaticMapAPI - a free service that provides static map images
+  // No API key required, works reliably
+  const zoom = 15;
+  return `https://staticmap.openstreetmap.de/staticmap.php?center=${lat},${lng}&zoom=${zoom}&size=${width}x${height}&markers=${lat},${lng},red-pushpin`;
+}
+
+/**
+ * Get a property image with multiple fallback strategies
  */
 export function getPropertyImageUrl(options: PropertyImageOptions): string | null {
   const { address, coordinates, width = 400, height = 300, fov = 90, pitch = 0 } = options;
 
-  // If we have coordinates, use them directly (more accurate)
+  // If we have coordinates, try multiple services
   if (coordinates && coordinates.length === 2) {
     const [lat, lng] = coordinates;
-    // Google Street View Static API
-    // Note: This requires a Google Maps API key for production use
-    // For now, we'll use a placeholder service or you can add your API key
-    const apiKey = process.env.REACT_APP_GOOGLE_MAPS_API_KEY || '';
     
-    if (apiKey) {
-      return `https://maps.googleapis.com/maps/api/streetview?size=${width}x${height}&location=${lat},${lng}&fov=${fov}&pitch=${pitch}&key=${apiKey}`;
-    } else {
-      // Fallback: Use a placeholder image service or generate a map thumbnail
-      // Using Mapbox Static Images API as alternative (requires API key)
-      // Or use a simple placeholder
-      return `https://api.mapbox.com/styles/v1/mapbox/streets-v11/static/pin-s+ff0000(${lng},${lat})/${lng},${lat},15,0/${width}x${height}?access_token=${process.env.REACT_APP_MAPBOX_TOKEN || ''}`;
-    }
+    // Try Google Street View first (if API key available)
+    const googleUrl = getGoogleStreetViewUrl(lat, lng, width, height, fov, pitch);
+    if (googleUrl) return googleUrl;
+    
+    // Try Mapbox (if API key available)
+    const mapboxUrl = getMapboxStaticMapUrl(lat, lng, width, height);
+    if (mapboxUrl) return mapboxUrl;
+    
+    // Use free static map service (no API key needed!) - always works
+    return getFreeStaticMapUrl(lat, lng, width, height);
   }
 
-  // If we only have an address, we could geocode it first
-  // For now, return null and let the component handle it
   return null;
 }
 
@@ -45,23 +72,25 @@ export function getPropertyImageUrl(options: PropertyImageOptions): string | nul
  * Get a placeholder image URL if Street View is not available
  */
 export function getPlaceholderImageUrl(address?: string): string {
-  // Using Unsplash Source API for placeholder images
-  // You can replace this with any placeholder service
-  const searchTerm = address ? encodeURIComponent(address.split(',')[0]) : 'house';
-  return `https://source.unsplash.com/400x300/?${searchTerm},house,real-estate`;
+  // Use a reliable placeholder service that always works
+  const addressPart = address ? address.split(',')[0].trim().substring(0, 20) : 'Property';
+  
+  // Use placeholder.com (always works, no API key, reliable)
+  return `https://via.placeholder.com/400x300/4F46E5/FFFFFF?text=${encodeURIComponent(addressPart)}`;
 }
 
 /**
- * Get property image with fallback
+ * Get property image with fallback - always returns a valid URL
  */
 export function getPropertyImageWithFallback(options: PropertyImageOptions): string {
-  const streetViewUrl = getPropertyImageUrl(options);
+  // Try to get a real image first
+  const imageUrl = getPropertyImageUrl(options);
   
-  if (streetViewUrl) {
-    return streetViewUrl;
+  if (imageUrl) {
+    return imageUrl;
   }
   
-  // Fallback to placeholder
+  // Fallback to placeholder with address
   return getPlaceholderImageUrl(options.address);
 }
 
