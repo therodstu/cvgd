@@ -116,10 +116,11 @@ const PropertyList: React.FC<PropertyListProps> = ({
                         className="w-full h-full object-cover"
                         loading="lazy"
                         onError={(e) => {
-                          // Fallback to a simple placeholder if image fails to load
+                          // Fallback to SVG placeholder if image fails to load
                           const target = e.target as HTMLImageElement;
-                          const addressPart = property.address.split(',')[0].substring(0, 15);
-                          target.src = `https://via.placeholder.com/300x200/6366f1/ffffff?text=${encodeURIComponent(addressPart)}`;
+                          const addressPart = property.address.split(',')[0].substring(0, 20);
+                          const svg = `<svg width="300" height="200" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" fill="#6366f1"/><text x="50%" y="50%" text-anchor="middle" font-family="Arial" font-size="14" fill="#ffffff">${addressPart.replace(/&/g, '&amp;')}</text></svg>`;
+                          target.src = `data:image/svg+xml;base64,${btoa(svg)}`;
                         }}
                       />
                     </div>

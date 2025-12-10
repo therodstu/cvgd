@@ -311,10 +311,11 @@ const Map: React.FC<MapProps> = ({
                           className="w-full h-full object-cover"
                           loading="lazy"
                           onError={(e) => {
-                            // Final fallback if image fails to load
+                            // Final fallback - use SVG data URI (always works)
                             const target = e.target as HTMLImageElement;
-                            const addressPart = property.address.split(',')[0].substring(0, 12);
-                            target.src = `https://via.placeholder.com/250x150/6366f1/ffffff?text=${encodeURIComponent(addressPart)}`;
+                            const addressPart = property.address.split(',')[0].substring(0, 15);
+                            const svg = `<svg width="250" height="150" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" fill="#6366f1"/><text x="50%" y="50%" text-anchor="middle" font-family="Arial" font-size="12" fill="#ffffff">${addressPart.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</text></svg>`;
+                            target.src = `data:image/svg+xml;base64,${btoa(svg)}`;
                           }}
                         />
                       </div>

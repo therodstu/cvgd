@@ -34,16 +34,26 @@ function getMapboxStaticMapUrl(lat: number, lng: number, width: number, height: 
 
 /**
  * Get a static map image using a free service (no API key required!)
- * Uses a reliable static map service
+ * Uses a simple, reliable data URI approach for guaranteed display
  */
 function getFreeStaticMapUrl(lat: number, lng: number, width: number, height: number): string {
-  // Use StaticMapAPI service - free, reliable, no API key needed
-  // This service generates static map images with markers
-  const zoom = 15;
+  // Since external services are unreliable, use a simple SVG map with coordinates
+  // This always works and doesn't require external services
+  const svg = `
+    <svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
+      <rect width="100%" height="100%" fill="#e5e7eb"/>
+      <text x="50%" y="45%" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="#6b7280">
+        Map View
+      </text>
+      <text x="50%" y="60%" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#9ca3af">
+        ${lat.toFixed(4)}, ${lng.toFixed(4)}
+      </text>
+      <circle cx="50%" cy="40%" r="4" fill="#ef4444"/>
+    </svg>
+  `.trim();
   
-  // StaticMapAPI format: center=lat,lng&zoom=level&size=widthxheight&markers=lat,lng,color
-  // This service is reliable and always returns an image
-  return `https://staticmap.openstreetmap.de/staticmap.php?center=${lat},${lng}&zoom=${zoom}&size=${width}x${height}&markers=${lat},${lng},red-pushpin`;
+  // Convert to data URI - this always works, no external requests needed
+  return `data:image/svg+xml;base64,${btoa(svg)}`;
 }
 
 /**
@@ -73,20 +83,31 @@ export function getPropertyImageUrl(options: PropertyImageOptions): string | nul
 
 /**
  * Get a placeholder image URL if Street View is not available
+ * Uses SVG data URI for guaranteed reliability
  */
-export function getPlaceholderImageUrl(address?: string): string {
-  // Use a reliable placeholder service that always works
-  const addressPart = address ? address.split(',')[0].trim().substring(0, 20) : 'Property';
+export function getPlaceholderImageUrl(address?: string, width: number = 400, height: number = 300): string {
+  // Use SVG data URI - this always works, no external requests, no CORS issues
+  const addressPart = address ? address.split(',')[0].trim().substring(0, 25) : 'Property';
   
-  // Use placeholder.com (always works, no API key, reliable, no CORS issues)
-  // Format: https://via.placeholder.com/WIDTHxHEIGHT/COLOR/TEXTCOLOR?text=TEXT
-  return `https://via.placeholder.com/400x300/6366f1/ffffff?text=${encodeURIComponent(addressPart)}`;
+  const svg = `
+    <svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
+      <rect width="100%" height="100%" fill="#6366f1"/>
+      <text x="50%" y="50%" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#ffffff">
+        ${addressPart.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}
+      </text>
+    </svg>
+  `.trim();
+  
+  // Convert to data URI - always works!
+  return `data:image/svg+xml;base64,${btoa(svg)}`;
 }
 
 /**
  * Get property image with fallback - always returns a valid URL
  */
 export function getPropertyImageWithFallback(options: PropertyImageOptions): string {
+  const { address, coordinates, width = 400, height = 300 } = options;
+  
   // Try to get a real image first
   const imageUrl = getPropertyImageUrl(options);
   
@@ -94,7 +115,7 @@ export function getPropertyImageWithFallback(options: PropertyImageOptions): str
     return imageUrl;
   }
   
-  // Fallback to placeholder with address
-  return getPlaceholderImageUrl(options.address);
+  // Fallback to placeholder with address (using SVG data URI - always works)
+  return getPlaceholderImageUrl(address, width, height);
 }
 

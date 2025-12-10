@@ -100,9 +100,11 @@ const PropertyInfoPanel: React.FC<PropertyInfoPanelProps> = ({
                 className="w-full h-full object-cover"
                 loading="lazy"
                 onError={(e) => {
+                  // Fallback to SVG data URI (always works)
                   const target = e.target as HTMLImageElement;
-                  const addressPart = property.address.split(',')[0].substring(0, 15);
-                  target.src = `https://via.placeholder.com/400x250/6366f1/ffffff?text=${encodeURIComponent(addressPart)}`;
+                  const addressPart = property.address.split(',')[0].substring(0, 20);
+                  const svg = `<svg width="400" height="250" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" fill="#6366f1"/><text x="50%" y="50%" text-anchor="middle" font-family="Arial" font-size="16" fill="#ffffff">${addressPart.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</text></svg>`;
+                  target.src = `data:image/svg+xml;base64,${btoa(svg)}`;
                 }}
               />
             </div>
