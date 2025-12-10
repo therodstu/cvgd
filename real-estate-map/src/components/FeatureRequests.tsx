@@ -29,23 +29,17 @@ const FeatureRequests: React.FC = () => {
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [requestToDelete, setRequestToDelete] = useState<FeatureRequest | null>(null);
 
-  const getAuthToken = (): string | null => {
-    return localStorage.getItem('auth_token');
-  };
-
-  const getAuthHeaders = (): HeadersInit => {
-    const token = getAuthToken();
-    return {
-      'Content-Type': 'application/json',
-      ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-    };
-  };
-
   const fetchRequests = useCallback(async () => {
     try {
       setLoading(true);
+      const token = localStorage.getItem('auth_token');
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+      };
+      
       const response = await fetch(`${API_URL}/api/feature-requests`, {
-        headers: getAuthHeaders()
+        headers
       });
 
       if (!response.ok) {
@@ -67,9 +61,15 @@ const FeatureRequests: React.FC = () => {
 
   const updateStatus = async (id: number, status: string) => {
     try {
+      const token = localStorage.getItem('auth_token');
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+      };
+      
       const response = await fetch(`${API_URL}/api/feature-requests/${id}`, {
         method: 'PUT',
-        headers: getAuthHeaders(),
+        headers,
         body: JSON.stringify({ status })
       });
 
@@ -88,9 +88,15 @@ const FeatureRequests: React.FC = () => {
     if (!requestToDelete) return;
 
     try {
+      const token = localStorage.getItem('auth_token');
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+      };
+      
       const response = await fetch(`${API_URL}/api/feature-requests/${requestToDelete.id}`, {
         method: 'DELETE',
-        headers: getAuthHeaders()
+        headers
       });
 
       if (!response.ok) {
