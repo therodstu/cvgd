@@ -2,10 +2,13 @@
 const { Pool } = require('pg');
 const bcrypt = require('bcryptjs');
 
-// Create connection pool
+// Create connection pool with better timeout settings
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: process.env.DATABASE_URL?.includes('railway') ? { rejectUnauthorized: false } : false
+  ssl: process.env.DATABASE_URL?.includes('railway') || process.env.DATABASE_URL?.includes('railway.app') ? { rejectUnauthorized: false } : false,
+  connectionTimeoutMillis: 10000, // 10 seconds
+  idleTimeoutMillis: 30000,
+  max: 10
 });
 
 class Database {
@@ -13,17 +16,37 @@ class Database {
     this.pool = pool;
   }
 
-  // Initialize database and create tables
-  async initialize() {
-    try {
-      // Test connection
-      await this.pool.query('SELECT NOW()');
-      console.log('Connected to PostgreSQL database');
-      
-      await this.createTables();
-    } catch (error) {
-      console.error('Error initializing database:', error);
-      throw error;
+  // Initialize database and create tables with retry logic
+  async initialize(retries = 5, delay = 2000) {
+    for (let i = 0; i < retries; i++) {
+      try {
+        // Test connection
+        await this.pool.query('SELECT NOW()');
+        console.log('✅ Connected to PostgreSQL database');
+        
+        await this.createTables();
+        return; // Success, exit retry loop
+      } catch (error) {
+        const isLastAttempt = i === retries - 1;
+        
+        if (isLastAttempt) {
+          console.error('❌ Error initializing database after', retries, 'attempts:', error.message);
+          console.error('Connection details:', {
+            host: error.address || 'unknown',
+            port: error.port || 'unknown',
+            code: error.code,
+            errno: error.errno
+          });
+          throw error;
+        }
+        
+        console.warn(`⚠️  Database connection attempt ${i + 1}/${retries} failed. Retrying in ${delay}ms...`);
+        console.warn('Error:', error.message);
+        
+        // Wait before retrying (exponential backoff)
+        await new Promise(resolve => setTimeout(resolve, delay));
+        delay = Math.min(delay * 1.5, 10000); // Increase delay, max 10 seconds
+      }
     }
   }
 
