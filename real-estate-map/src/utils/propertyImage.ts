@@ -33,22 +33,17 @@ function getMapboxStaticMapUrl(lat: number, lng: number, width: number, height: 
 }
 
 /**
- * Get a static map image using a free service (no API key required!)
- * Uses a simple, reliable data URI approach for guaranteed display
+ * Get a static map image using a simple SVG placeholder
+ * Shows "Property Images Coming Soon" message
  */
 function getFreeStaticMapUrl(lat: number, lng: number, width: number, height: number): string {
-  // Since external services are unreliable, use a simple SVG map with coordinates
-  // This always works and doesn't require external services
+  // Use a simple SVG placeholder with "Coming Soon" message
   const svg = `
     <svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
-      <rect width="100%" height="100%" fill="#e5e7eb"/>
-      <text x="50%" y="45%" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="#6b7280">
-        Map View
+      <rect width="100%" height="100%" fill="#f3f4f6"/>
+      <text x="50%" y="50%" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="500" fill="#6b7280">
+        Property Images Coming Soon
       </text>
-      <text x="50%" y="60%" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#9ca3af">
-        ${lat.toFixed(4)}, ${lng.toFixed(4)}
-      </text>
-      <circle cx="50%" cy="40%" r="4" fill="#ef4444"/>
     </svg>
   `.trim();
   
@@ -86,14 +81,12 @@ export function getPropertyImageUrl(options: PropertyImageOptions): string | nul
  * Uses SVG data URI for guaranteed reliability
  */
 export function getPlaceholderImageUrl(address?: string, width: number = 400, height: number = 300): string {
-  // Use SVG data URI - this always works, no external requests, no CORS issues
-  const addressPart = address ? address.split(',')[0].trim().substring(0, 25) : 'Property';
-  
+  // Use SVG data URI with "Coming Soon" message
   const svg = `
     <svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
-      <rect width="100%" height="100%" fill="#6366f1"/>
-      <text x="50%" y="50%" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#ffffff">
-        ${addressPart.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}
+      <rect width="100%" height="100%" fill="#f3f4f6"/>
+      <text x="50%" y="50%" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="500" fill="#6b7280">
+        Property Images Coming Soon
       </text>
     </svg>
   `.trim();

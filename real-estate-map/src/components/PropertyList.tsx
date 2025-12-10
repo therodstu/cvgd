@@ -4,7 +4,6 @@ import { Button } from './ui/button';
 import { Property } from '../services/propertyService';
 import { ThumbsUp, ThumbsDown, Trash2, Trash } from 'lucide-react';
 import DeleteConfirmationModal from './DeleteConfirmationModal';
-import { getPropertyImageWithFallback } from '../utils/propertyImage';
 
 interface PropertyListProps {
   properties: Property[];
@@ -95,37 +94,12 @@ const PropertyList: React.FC<PropertyListProps> = ({
           ) : (
             <div className="space-y-4">
               {properties.map((property) => {
-                const imageUrl = getPropertyImageWithFallback({
-                  address: property.address,
-                  coordinates: property.coordinates,
-                  width: 300,
-                  height: 200
-                });
-
                 return (
                   <div
                     key={property.id}
-                    className="border rounded-lg overflow-hidden hover:bg-accent/50 transition-colors cursor-pointer"
+                    className="border rounded-lg p-4 hover:bg-accent/50 transition-colors cursor-pointer"
                     onClick={() => onPropertyClick?.(property)}
                   >
-                    {/* Property Image */}
-                    <div className="w-full h-48 overflow-hidden bg-gray-100 flex items-center justify-center">
-                      <img
-                        src={imageUrl}
-                        alt={property.address}
-                        className="w-full h-full object-cover"
-                        loading="lazy"
-                        onError={(e) => {
-                          // Fallback to SVG placeholder if image fails to load
-                          const target = e.target as HTMLImageElement;
-                          const addressPart = property.address.split(',')[0].substring(0, 20);
-                          const svg = `<svg width="300" height="200" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" fill="#6366f1"/><text x="50%" y="50%" text-anchor="middle" font-family="Arial" font-size="14" fill="#ffffff">${addressPart.replace(/&/g, '&amp;')}</text></svg>`;
-                          target.src = `data:image/svg+xml;base64,${btoa(svg)}`;
-                        }}
-                      />
-                    </div>
-                    
-                    <div className="p-4">
                       <div className="flex justify-between items-start mb-2">
                         <div className="flex-1">
                           <h3 className="font-semibold text-lg">{property.address}</h3>
