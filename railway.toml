@@ -1,0 +1,11 @@
+[build]
+builder = "nixpacks"
+
+[deploy]
+# If root directory is set to real-estate-map/backend in Railway dashboard,
+# Railway will automatically use npm start from package.json
+# Otherwise, uncomment the line below:
+# startCommand = "cd real-estate-map/backend && npm start"
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10
+
