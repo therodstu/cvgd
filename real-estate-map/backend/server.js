@@ -792,6 +792,16 @@ io.on('connection', (socket) => {
 // Initialize database and start server
 const PORT = process.env.PORT || 5000;
 
+// Check for required environment variables
+if (!process.env.DATABASE_URL) {
+  console.error('❌ ERROR: DATABASE_URL environment variable is not set!');
+  console.error('Please set DATABASE_URL in Railway:');
+  console.error('1. Go to your PostgreSQL service in Railway');
+  console.error('2. Copy the DATABASE_URL from the Variables tab');
+  console.error('3. Add it to your Backend service Variables tab');
+  process.exit(1);
+}
+
 database.initialize()
   .then(async () => {
     // Log existing properties on startup for debugging
@@ -829,12 +839,18 @@ database.initialize()
     }
     
     server.listen(PORT, () => {
-      console.log(`Server running on port ${PORT}`);
-      console.log(`Default admin: admin@clintonville.com / admin123`);
+      console.log(`✅ Server running on port ${PORT}`);
+      console.log(`✅ Default admin: admin@clintonville.com / admin123`);
     });
   })
   .catch((err) => {
-    console.error('Failed to initialize database:', err);
+    console.error('❌ Failed to initialize database:', err);
+    console.error('Error details:', err.message);
+    if (err.code === 'ECONNREFUSED') {
+      console.error('Database connection refused. Check that PostgreSQL service is running.');
+    } else if (err.message && err.message.includes('password')) {
+      console.error('Database authentication failed. Check DATABASE_URL credentials.');
+    }
     process.exit(1);
   });
 
