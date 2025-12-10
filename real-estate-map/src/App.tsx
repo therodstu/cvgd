@@ -304,7 +304,7 @@ function App() {
         <div className="container mx-auto flex justify-between items-center">
           <div className="text-center flex-1">
             <h1 className="text-3xl font-bold">
-              Clintonville Real Estate Investment Map
+              Clintonville Girl Dads
             </h1>
             <p className="mt-2 text-primary-foreground/80">
               Interactive parcel mapping with zoning and valuation data
