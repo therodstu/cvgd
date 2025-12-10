@@ -304,14 +304,17 @@ const Map: React.FC<MapProps> = ({
                     });
                     
                     return (
-                      <div className="w-full h-32 mb-2 overflow-hidden rounded bg-gray-100">
+                      <div className="w-full h-32 mb-2 overflow-hidden rounded bg-gray-100 flex items-center justify-center">
                         <img
                           src={imageUrl}
                           alt={property.address}
                           className="w-full h-full object-cover"
+                          loading="lazy"
                           onError={(e) => {
                             // Final fallback if image fails to load
-                            (e.target as HTMLImageElement).src = `https://via.placeholder.com/250x150/4F46E5/FFFFFF?text=${encodeURIComponent(property.address.split(',')[0].substring(0, 15))}`;
+                            const target = e.target as HTMLImageElement;
+                            const addressPart = property.address.split(',')[0].substring(0, 12);
+                            target.src = `https://via.placeholder.com/250x150/6366f1/ffffff?text=${encodeURIComponent(addressPart)}`;
                           }}
                         />
                       </div>

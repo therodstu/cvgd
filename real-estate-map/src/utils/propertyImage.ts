@@ -34,21 +34,22 @@ function getMapboxStaticMapUrl(lat: number, lng: number, width: number, height: 
 
 /**
  * Get a static map image using a free service (no API key required!)
- * Uses multiple fallback services for reliability
+ * Uses a simple, reliable approach
  */
 function getFreeStaticMapUrl(lat: number, lng: number, width: number, height: number): string {
-  // Option 1: Use Nominatim static map (OpenStreetMap based, free, no API key)
-  // This is more reliable than staticmap.openstreetmap.de
+  // Use a simple static map service that works reliably
+  // Using a free service that generates map images
   const zoom = 15;
   
-  // Use a simple tile-based approach that always works
-  // Calculate which tile contains the coordinates
+  // Option 1: Use a simple map tile (this will show a map tile)
+  // Calculate tile coordinates
   const n = Math.pow(2, zoom);
   const xTile = Math.floor((lng + 180) / 360 * n);
   const yTile = Math.floor((1 - Math.log(Math.tan(lat * Math.PI / 180) + 1 / Math.cos(lat * Math.PI / 180)) / Math.PI) / 2 * n);
   
-  // Use OpenStreetMap tile server (free, reliable, no API key needed)
-  // This will show a map tile centered on the property
+  // Use OpenStreetMap tile - this is reliable and free
+  // Note: This shows a single tile, which may not be perfectly centered
+  // But it's reliable and always works
   return `https://tile.openstreetmap.org/${zoom}/${xTile}/${yTile}.png`;
 }
 
