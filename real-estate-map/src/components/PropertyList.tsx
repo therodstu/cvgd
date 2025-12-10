@@ -109,14 +109,17 @@ const PropertyList: React.FC<PropertyListProps> = ({
                     onClick={() => onPropertyClick?.(property)}
                   >
                     {/* Property Image */}
-                    <div className="w-full h-48 overflow-hidden bg-gray-100">
+                    <div className="w-full h-48 overflow-hidden bg-gray-100 flex items-center justify-center">
                       <img
                         src={imageUrl}
                         alt={property.address}
                         className="w-full h-full object-cover"
+                        loading="lazy"
                         onError={(e) => {
                           // Fallback to a simple placeholder if image fails to load
-                          (e.target as HTMLImageElement).src = `https://via.placeholder.com/300x200?text=${encodeURIComponent(property.address.split(',')[0])}`;
+                          const target = e.target as HTMLImageElement;
+                          const addressPart = property.address.split(',')[0].substring(0, 15);
+                          target.src = `https://via.placeholder.com/300x200/6366f1/ffffff?text=${encodeURIComponent(addressPart)}`;
                         }}
                       />
                     </div>

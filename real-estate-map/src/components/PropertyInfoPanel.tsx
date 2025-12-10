@@ -93,13 +93,16 @@ const PropertyInfoPanel: React.FC<PropertyInfoPanelProps> = ({
           });
 
           return (
-            <div className="w-full h-48 overflow-hidden rounded-lg bg-gray-100 mb-4">
+            <div className="w-full h-48 overflow-hidden rounded-lg bg-gray-100 mb-4 flex items-center justify-center">
               <img
                 src={imageUrl}
                 alt={property.address}
                 className="w-full h-full object-cover"
+                loading="lazy"
                 onError={(e) => {
-                  (e.target as HTMLImageElement).src = `https://via.placeholder.com/400x250?text=${encodeURIComponent(property.address.split(',')[0])}`;
+                  const target = e.target as HTMLImageElement;
+                  const addressPart = property.address.split(',')[0].substring(0, 15);
+                  target.src = `https://via.placeholder.com/400x250/6366f1/ffffff?text=${encodeURIComponent(addressPart)}`;
                 }}
               />
             </div>

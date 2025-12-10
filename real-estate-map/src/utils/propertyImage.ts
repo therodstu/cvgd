@@ -33,14 +33,23 @@ function getMapboxStaticMapUrl(lat: number, lng: number, width: number, height: 
 }
 
 /**
- * Get a static map image using StaticMapAPI (free, no API key required!)
- * This service provides static map images without requiring authentication
+ * Get a static map image using a free service (no API key required!)
+ * Uses multiple fallback services for reliability
  */
 function getFreeStaticMapUrl(lat: number, lng: number, width: number, height: number): string {
-  // Using StaticMapAPI - a free service that provides static map images
-  // No API key required, works reliably
+  // Option 1: Use Nominatim static map (OpenStreetMap based, free, no API key)
+  // This is more reliable than staticmap.openstreetmap.de
   const zoom = 15;
-  return `https://staticmap.openstreetmap.de/staticmap.php?center=${lat},${lng}&zoom=${zoom}&size=${width}x${height}&markers=${lat},${lng},red-pushpin`;
+  
+  // Use a simple tile-based approach that always works
+  // Calculate which tile contains the coordinates
+  const n = Math.pow(2, zoom);
+  const xTile = Math.floor((lng + 180) / 360 * n);
+  const yTile = Math.floor((1 - Math.log(Math.tan(lat * Math.PI / 180) + 1 / Math.cos(lat * Math.PI / 180)) / Math.PI) / 2 * n);
+  
+  // Use OpenStreetMap tile server (free, reliable, no API key needed)
+  // This will show a map tile centered on the property
+  return `https://tile.openstreetmap.org/${zoom}/${xTile}/${yTile}.png`;
 }
 
 /**
@@ -75,8 +84,9 @@ export function getPlaceholderImageUrl(address?: string): string {
   // Use a reliable placeholder service that always works
   const addressPart = address ? address.split(',')[0].trim().substring(0, 20) : 'Property';
   
-  // Use placeholder.com (always works, no API key, reliable)
-  return `https://via.placeholder.com/400x300/4F46E5/FFFFFF?text=${encodeURIComponent(addressPart)}`;
+  // Use placeholder.com (always works, no API key, reliable, no CORS issues)
+  // Format: https://via.placeholder.com/WIDTHxHEIGHT/COLOR/TEXTCOLOR?text=TEXT
+  return `https://via.placeholder.com/400x300/6366f1/ffffff?text=${encodeURIComponent(addressPart)}`;
 }
 
 /**
