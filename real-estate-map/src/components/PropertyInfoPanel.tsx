@@ -6,18 +6,9 @@ import NotesDialog from './NotesDialog';
 import PropertyValuationModal from './PropertyValuationModal';
 import LoanCalculatorModal from './LoanCalculatorModal';
 import { Edit2, Check, X, Calculator, DollarSign } from 'lucide-react';
+import { getPropertyImageWithFallback } from '../utils/propertyImage';
 
-interface Property {
-  id: number;
-  address: string;
-  zoning: string;
-  value: number;
-  notes: string;
-  taxValue?: number;
-  assessedValue?: number;
-  capRate?: number;
-  monthlyPayment?: number;
-}
+import { Property } from '../services/propertyService';
 
 interface PropertyInfoPanelProps {
   property: Property | null;
@@ -92,6 +83,29 @@ const PropertyInfoPanel: React.FC<PropertyInfoPanelProps> = ({
       </CardHeader>
       
       <CardContent className="space-y-4">
+        {/* Property Image */}
+        {(() => {
+          const imageUrl = getPropertyImageWithFallback({
+            address: property.address,
+            coordinates: property.coordinates as [number, number] | undefined,
+            width: 400,
+            height: 250
+          });
+
+          return (
+            <div className="w-full h-48 overflow-hidden rounded-lg bg-gray-100 mb-4">
+              <img
+                src={imageUrl}
+                alt={property.address}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = `https://via.placeholder.com/400x250?text=${encodeURIComponent(property.address.split(',')[0])}`;
+                }}
+              />
+            </div>
+          );
+        })()}
+
         {/* Financial Information */}
         <div className="space-y-3">
           <h3 className="font-semibold text-sm text-gray-700">Financial Information</h3>

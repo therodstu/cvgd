@@ -4,6 +4,7 @@ import { Button } from './ui/button';
 import { Property } from '../services/propertyService';
 import { ThumbsUp, ThumbsDown, Trash2, Trash } from 'lucide-react';
 import DeleteConfirmationModal from './DeleteConfirmationModal';
+import { getPropertyImageWithFallback } from '../utils/propertyImage';
 
 interface PropertyListProps {
   properties: Property[];
@@ -93,73 +94,97 @@ const PropertyList: React.FC<PropertyListProps> = ({
             </div>
           ) : (
             <div className="space-y-4">
-              {properties.map((property) => (
-                <div
-                  key={property.id}
-                  className="border rounded-lg p-4 hover:bg-accent/50 transition-colors cursor-pointer"
-                  onClick={() => onPropertyClick?.(property)}
-                >
-                  <div className="flex justify-between items-start mb-2">
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-lg">{property.address}</h3>
-                      <p className="text-sm text-muted-foreground">{property.zoning}</p>
-                      {property.createdByName && (
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Submitted by: {property.createdByName}
-                        </p>
-                      )}
+              {properties.map((property) => {
+                const imageUrl = getPropertyImageWithFallback({
+                  address: property.address,
+                  coordinates: property.coordinates,
+                  width: 300,
+                  height: 200
+                });
+
+                return (
+                  <div
+                    key={property.id}
+                    className="border rounded-lg overflow-hidden hover:bg-accent/50 transition-colors cursor-pointer"
+                    onClick={() => onPropertyClick?.(property)}
+                  >
+                    {/* Property Image */}
+                    <div className="w-full h-48 overflow-hidden bg-gray-100">
+                      <img
+                        src={imageUrl}
+                        alt={property.address}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          // Fallback to a simple placeholder if image fails to load
+                          (e.target as HTMLImageElement).src = `https://via.placeholder.com/300x200?text=${encodeURIComponent(property.address.split(',')[0])}`;
+                        }}
+                      />
                     </div>
-                    <div className="text-right">
-                      <div className="font-bold text-lg text-primary">
-                        {formatPrice(property.value)}
+                    
+                    <div className="p-4">
+                      <div className="flex justify-between items-start mb-2">
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-lg">{property.address}</h3>
+                          <p className="text-sm text-muted-foreground">{property.zoning}</p>
+                          {property.createdByName && (
+                            <p className="text-xs text-muted-foreground mt-1">
+                              Submitted by: {property.createdByName}
+                            </p>
+                          )}
+                        </div>
+                        <div className="text-right">
+                          <div className="font-bold text-lg text-primary">
+                            {formatPrice(property.value)}
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center justify-between mt-3 pt-3 border-t">
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onVote(property.id, 'up');
+                            }}
+                            className="flex items-center gap-1"
+                          >
+                            <ThumbsUp className="h-4 w-4" />
+                            <span>{property.thumbsUp || 0}</span>
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onVote(property.id, 'down');
+                            }}
+                            className="flex items-center gap-1"
+                          >
+                            <ThumbsDown className="h-4 w-4" />
+                            <span>{property.thumbsDown || 0}</span>
+                          </Button>
+                        </div>
+                        {isAdmin && (
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteClick(property);
+                            }}
+                            className="flex items-center gap-1"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                            Delete
+                          </Button>
+                        )}
                       </div>
                     </div>
                   </div>
-                  
-                  <div className="flex items-center justify-between mt-3 pt-3 border-t">
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onVote(property.id, 'up');
-                        }}
-                        className="flex items-center gap-1"
-                      >
-                        <ThumbsUp className="h-4 w-4" />
-                        <span>{property.thumbsUp || 0}</span>
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onVote(property.id, 'down');
-                        }}
-                        className="flex items-center gap-1"
-                      >
-                        <ThumbsDown className="h-4 w-4" />
-                        <span>{property.thumbsDown || 0}</span>
-                      </Button>
-                    </div>
-                    {isAdmin && (
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteClick(property);
-                        }}
-                        className="flex items-center gap-1"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                        Delete
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </CardContent>
