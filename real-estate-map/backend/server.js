@@ -12,26 +12,54 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
-    origin: [
-      "http://localhost:3000", 
-      "http://localhost:3001",
-      /\.railway\.app$/,  // Allow all Railway domains
-      /\.railway\.internal$/  // Allow Railway internal domains
-    ],
-    methods: ["GET", "POST"]
+    origin: function (origin, callback) {
+      // Allow requests with no origin
+      if (!origin) return callback(null, true);
+      
+      // Allow localhost for development
+      if (origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:')) {
+        return callback(null, true);
+      }
+      
+      // Allow all Railway domains
+      if (origin.includes('.railway.app') || origin.includes('.railway.internal')) {
+        return callback(null, true);
+      }
+      
+      callback(null, true); // Allow all origins
+    },
+    methods: ["GET", "POST"],
+    credentials: true
   }
 });
 
-// Middleware
-app.use(cors({
-  origin: [
-    "http://localhost:3000",
-    "http://localhost:3001",
-    /\.railway\.app$/,  // Allow all Railway domains
-    /\.railway\.internal$/  // Allow Railway internal domains
-  ],
+// Middleware - CORS configuration
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    // Allow localhost for development
+    if (origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:')) {
+      return callback(null, true);
+    }
+    
+    // Allow all Railway domains
+    if (origin.includes('.railway.app') || origin.includes('.railway.internal')) {
+      return callback(null, true);
+    }
+    
+    // Allow any origin in development, restrict in production if needed
+    if (process.env.NODE_ENV !== 'production') {
+      return callback(null, true);
+    }
+    
+    callback(null, true); // Allow all origins for now
+  },
   credentials: true
-}));
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
 
 // Properties will be loaded from database on startup
